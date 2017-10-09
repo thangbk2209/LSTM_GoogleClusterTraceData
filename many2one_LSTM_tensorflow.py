@@ -23,7 +23,7 @@ def create_dataset(dataset, look_back=1):
 	return numpy.array(dataX), numpy.array(dataY)
 
 # tbCallBack = keras.callbacks.TensorBoard(log_dir='Graph/test.png', histogram_freq=0,  write_graph=True, write_images=True)
-# tensorboard = TensorBoard(log_dir="logs/{}".format(time()))
+tensorboard = TensorBoard(log_dir="logs/{}".format(time()))
 # df = read_csv('/home/nguyen/learnRNNs/international-airline-passengers.csv', usecols=[1], engine='python', skipfooter=3)
 colnames=['time_stamp','numberOfTaskIndex','numberOfMachineId','meanCPUUsage','CMU','AssignMem','unmapped_cache_usage','page_cache_usage', 'max_mem_usage','mean_diskIO_time','mean_local_disk_space','max_cpu_usage', 'max_disk_io_time', 'cpi', 'mai','sampled_cpu_usage']
 # 
@@ -58,16 +58,18 @@ trainX = numpy.reshape(trainX, (trainX.shape[0], trainX.shape[1], 1))
 testX = numpy.reshape(testX, (testX.shape[0], testX.shape[1], 1))
 # create and fit the LSTM network
 model = Sequential()
-model.add(LSTM(32, return_sequences=True,input_shape=(look_back, 1)))
-model.add(LSTM(32, return_sequences=True))
-model.add(LSTM(32))
+model.add(LSTM(16, return_sequences=True,input_shape=(look_back, 1)))
+model.add(LSTM(16, return_sequences=True))
+model.add(LSTM(16))
 model.add(Dense(1))
 model.compile(loss='mean_squared_error', optimizer='adam' , metrics=['acc'])
-model.fit(trainX, trainY, epochs=200, batch_size=1, verbose=2)
+model.fit(trainX, trainY, epochs=200, batch_size=1, verbose=2,callbacks=[tensorboard])
 # make predictions
 
 trainPredict = model.predict(trainX)
 testPredict = model.predict(testX)
+
+
 # invert predictions
 trainPredict = scaler.inverse_transform(trainPredict)
 trainY = scaler.inverse_transform([trainY])
@@ -87,12 +89,14 @@ testPredictPlot = numpy.empty_like(dataset)
 testPredictPlot[:, :] = numpy.nan
 testPredictPlot[len(trainPredict)+(look_back*2)+1:len(dataset)-1, :] = testPredict
 
+valuesPredict = []
 
 trainDf = pd.DataFrame(np.array(trainPredict))
-trainDf.to_csv('results/many2onetrainPredict.csv', index=False, header=None)
+trainDf.to_csv('results/many2one_tensorflow_trainPredict.csv', index=False, header=None)
 
 testDf = pd.DataFrame(np.array(testPredict))
-testDf.to_csv('results/many2onetestPredict.csv', index=False, header=None)
+testDf.to_csv('results/many2one_tensorflow_testPredict.csv', index=False, header=None)
+# plot baseline and predictions
 # plot baseline and predictions
 plt.plot(dataset1)
 plt.plot(trainPredictPlot)
@@ -101,8 +105,8 @@ plt.xlabel("TimeStamp")
 plt.ylabel("CPU")
 plt.text(0,250, 'trainScore:%s - testScore: %s'%(trainScore,testScore), style='italic',
         bbox={'facecolor':'red', 'alpha':0.5, 'pad':10})
-plt.savefig('CPUpredict_adam_many2one.png')
-pp = PdfPages('predictCPU_adam_many2one.pdf')
+plt.savefig('CPUpredict_adam_many2one_tensor.png')
+pp = PdfPages('predictCPU_adam_many2one_tensor.pdf')
 pp.savefig()
 pp.close()
 # plt.show()
