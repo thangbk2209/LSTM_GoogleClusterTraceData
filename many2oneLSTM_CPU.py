@@ -1,13 +1,16 @@
 import numpy
 import matplotlib
+from time import time
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import pandas as pd 
 import math
+import keras
 from pandas import read_csv
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers import LSTM
+from keras.callbacks import TensorBoard
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import mean_squared_error
 from matplotlib.backends.backend_pdf import PdfPages
@@ -19,12 +22,14 @@ def create_dataset(dataset, look_back=1):
 		dataY.append(dataset[i + look_back, 0])
 	return numpy.array(dataX), numpy.array(dataY)
 
+# tbCallBack = keras.callbacks.TensorBoard(log_dir='Graph/test.png', histogram_freq=0,  write_graph=True, write_images=True)
+tensorboard = TensorBoard(log_dir="logs/{}".format(time()))
 # df = read_csv('/home/nguyen/learnRNNs/international-airline-passengers.csv', usecols=[1], engine='python', skipfooter=3)
 colnames=['time_stamp','numberOfTaskIndex','numberOfMachineId','meanCPUUsage','CMU','AssignMem','unmapped_cache_usage','page_cache_usage', 'max_mem_usage','mean_diskIO_time','mean_local_disk_space','max_cpu_usage', 'max_disk_io_time', 'cpi', 'mai','sampled_cpu_usage']
-
+# 
 df = read_csv('/home/hunter/LSTM_GoogleClusterTraceData/data/data_resource_JobId_6336594489.csv', header=None, index_col=False, names=colnames, usecols=[4], engine='python')
 # df = read_csv('/home/nguyenthang/spark/google_cluster_analysis/results/data_resource_JobId_6336594489.csv', header=None, index_col=False, names=colnames, usecols=[4], engine='python')
-# df = read_csv('/home/nguyen/spark-lab/spark-2.1.1-bin-hadoop2.7/google_cluster_analysis/results/data_resource_JobId_6336594489.csv', header=None, index_col=False, names=colnames, usecols=[4], engine='python')
+# df = read_csv('/home/nguyen/learnRNNs/data/data_resource_JobId_6336594489.csv', header=None, index_col=False, names=colnames, usecols=[4], engine='python')
 
 dataset = df.values
 dataset1 = df.values
@@ -53,10 +58,12 @@ trainX = numpy.reshape(trainX, (trainX.shape[0], trainX.shape[1], 1))
 testX = numpy.reshape(testX, (testX.shape[0], testX.shape[1], 1))
 # create and fit the LSTM network
 model = Sequential()
-model.add(LSTM(4, input_shape=(look_back, 1)))
+model.add(LSTM(32, return_sequences=True,input_shape=(look_back, 1)))
+model.add(LSTM(32, return_sequences=True))
+model.add(LSTM(32))
 model.add(Dense(1))
 model.compile(loss='mean_squared_error', optimizer='adam' , metrics=['acc'])
-model.fit(trainX, trainY, epochs=100, batch_size=1, verbose=2)
+model.fit(trainX, trainY, epochs=200, batch_size=1, verbose=2,callbacks=[tensorboard])
 # make predictions
 
 trainPredict = model.predict(trainX)
@@ -79,6 +86,8 @@ trainPredictPlot[look_back:len(trainPredict)+look_back, :] = trainPredict
 testPredictPlot = numpy.empty_like(dataset)
 testPredictPlot[:, :] = numpy.nan
 testPredictPlot[len(trainPredict)+(look_back*2)+1:len(dataset)-1, :] = testPredict
+
+
 # plot baseline and predictions
 plt.plot(dataset1)
 plt.plot(trainPredictPlot)
