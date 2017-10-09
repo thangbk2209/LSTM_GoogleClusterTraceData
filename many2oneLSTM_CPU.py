@@ -23,13 +23,13 @@ def create_dataset(dataset, look_back=1):
 	return numpy.array(dataX), numpy.array(dataY)
 
 # tbCallBack = keras.callbacks.TensorBoard(log_dir='Graph/test.png', histogram_freq=0,  write_graph=True, write_images=True)
-tensorboard = TensorBoard(log_dir="logs/{}".format(time()))
+# tensorboard = TensorBoard(log_dir="logs/{}".format(time()))
 # df = read_csv('/home/nguyen/learnRNNs/international-airline-passengers.csv', usecols=[1], engine='python', skipfooter=3)
 colnames=['time_stamp','numberOfTaskIndex','numberOfMachineId','meanCPUUsage','CMU','AssignMem','unmapped_cache_usage','page_cache_usage', 'max_mem_usage','mean_diskIO_time','mean_local_disk_space','max_cpu_usage', 'max_disk_io_time', 'cpi', 'mai','sampled_cpu_usage']
 # 
-df = read_csv('/home/hunter/LSTM_GoogleClusterTraceData/data/data_resource_JobId_6336594489.csv', header=None, index_col=False, names=colnames, usecols=[4], engine='python')
+# df = read_csv('/home/hunter/LSTM_GoogleClusterTraceData/data/data_resource_JobId_6336594489.csv', header=None, index_col=False, names=colnames, usecols=[4], engine='python')
 # df = read_csv('/home/nguyenthang/spark/google_cluster_analysis/results/data_resource_JobId_6336594489.csv', header=None, index_col=False, names=colnames, usecols=[4], engine='python')
-# df = read_csv('/home/nguyen/learnRNNs/data/data_resource_JobId_6336594489.csv', header=None, index_col=False, names=colnames, usecols=[4], engine='python')
+df = read_csv('/home/nguyen/learnRNNs/data/data_resource_JobId_6336594489.csv', header=None, index_col=False, names=colnames, usecols=[4], engine='python')
 
 dataset = df.values
 dataset1 = df.values
@@ -63,7 +63,7 @@ model.add(LSTM(32, return_sequences=True))
 model.add(LSTM(32))
 model.add(Dense(1))
 model.compile(loss='mean_squared_error', optimizer='adam' , metrics=['acc'])
-model.fit(trainX, trainY, epochs=200, batch_size=1, verbose=2,callbacks=[tensorboard])
+model.fit(trainX, trainY, epochs=200, batch_size=1, verbose=2)
 # make predictions
 
 trainPredict = model.predict(trainX)
