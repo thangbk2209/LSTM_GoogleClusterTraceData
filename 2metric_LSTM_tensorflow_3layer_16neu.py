@@ -14,13 +14,13 @@ from keras.callbacks import TensorBoard, EarlyStopping
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import mean_squared_error
 from matplotlib.backends.backend_pdf import PdfPages
-def create_dataset(dataset, look_back=1):
-	dataX, dataY = [], []
-	for i in range(len(dataset)-look_back-1):
-		a = dataset[i:(i+look_back), 0]
-		dataX.append(a)
-		dataY.append(dataset[i + look_back, 0])
-	return np.array(dataX), np.array(dataY)
+# def create_dataset(dataset, look_back=1):
+# 	dataX, dataY = [], []
+# 	for i in range(len(dataset)-look_back-1):
+# 		a = dataset[i:(i+look_back), 0]
+# 		dataX.append(a)
+# 		dataY.append(dataset[i + look_back, 0])
+# 	return np.array(dataX), np.array(dataY)
 
 # tbCallBack = keras.callbacks.TensorBoard(log_dir='Graph/test.png', histogram_freq=0,  write_graph=True, write_images=True)
 tensorboard = TensorBoard(log_dir="logs/{}".format(time()))
@@ -29,47 +29,57 @@ colnames=['time_stamp','numberOfTaskIndex','numberOfMachineId','meanCPUUsage','C
 # 
 # df = read_csv('/home/hunter/LSTM_GoogleClusterTraceData/data/data_resource_JobId_6336594489.csv', header=None, index_col=False, names=colnames, usecols=[4], engine='python')
 # df = read_csv('/mnt/volume/ggcluster/spark-2.1.1-bin-hadoop2.7/thangbk2209/LSTM_GoogleClusterTraceData/data/data_resource_JobId_6336594489.csv', header=None, index_col=False, names=colnames, usecols=[4], engine='python')
-df = read_csv('/home/nguyen/learnRNNs/data/data_resource_JobId_6336594489.csv', header=None, index_col=False, names=colnames, usecols=[4], engine='python')
+df = read_csv('/home/nguyen/learnRNNs/data/data_resource_JobId_6336594489.csv', header=None, index_col=False, names=colnames, usecols=[4,6], engine='python')
 
 dataset = df.values
-dataset1 = df.values
-
 
 # normalize the dataset
-
+length = len(dataset)
 scaler = MinMaxScaler(feature_range=(0, 1))
-dataset = scaler.fit_transform(dataset)
+CPU_nomal = scaler.fit_transform(dataset.T[0])
+RAM_nomal = scaler.fit_transform(dataset.T[1])
 
-
+data = []
+for i in range(length):
+	a=[]
+	a.append(CPU_nomal[i])
+	a.append(RAM_nomal[i])
+	data.append(a)
+data = np.array(data)
 
 # split into train and test sets
 
 # split into train and test sets
-train_size = int(len(dataset) * 0.67)
-test_size = len(dataset) - train_size
-train, test = dataset[0:train_size,:], dataset[train_size:len(dataset),:]
+train_size = int(length * 0.67)
+test_size = length - train_size
+train, test = data[0:train_size,:], data[train_size:length,:]
+print "train"
+print train
+print test
 # reshape into X=t and Y=t+1
-look_back = 3
-trainX, trainY = create_dataset(train, look_back)
-testX, testY = create_dataset(test, look_back)
+# look_back = 3
+trainX, trainY = data[0:train_size], CPU_nomal[0:train_size]
+testX, testY = data[train_size:length], CPU_nomal[train_size:length]
 # reshape input to be [samples, time steps, features]
 
 trainX = np.reshape(trainX, (trainX.shape[0], trainX.shape[1], 1))
 testX = np.reshape(testX, (testX.shape[0], testX.shape[1], 1))
 # create and fit the LSTM network
 model = Sequential()
-model.add(LSTM(32,input_shape=(look_back, 1)))
-# model.add(LSTM(16, return_sequences=True))
-# model.add(LSTM(16))
+model.add(LSTM(16, return_sequences=True,input_shape=(2, 1)))
+model.add(LSTM(16, return_sequences=True))
+model.add(LSTM(16))
 model.add(Dense(1))
 model.compile(loss='mean_squared_error', optimizer='adam' , metrics=['acc'])
-model.fit(trainX, trainY, epochs=200, batch_size=1, verbose=2,callbacks=[EarlyStopping(monitor='loss', patience=2),tensorboard])
+model.fit(trainX, trainY, epochs=200, batch_size=1, verbose=2,callbacks=[tensorboard])
 # make predictions
+
 
 trainPredict = model.predict(trainX)
 testPredict = model.predict(testX)
 
-
+print trainPredict
+print testPredict
 # invert predictions
 trainPredict = scaler.inverse_transform(trainPredict)
 trainY = scaler.inverse_transform([trainY])
@@ -80,33 +90,14 @@ trainScore = math.sqrt(mean_squared_error(trainY[0], trainPredict[:,0]))
 print('Train Score: %.2f RMSE' % (trainScore))
 testScore = math.sqrt(mean_squared_error(testY[0], testPredict[:,0]))
 print('Test Score: %.2f RMSE' % (testScore))
-# shift train predictions for plotting
-trainPredictPlot = np.empty_like(dataset)
-trainPredictPlot[:, :] = np.nan
-trainPredictPlot[look_back:len(trainPredict)+look_back, :] = trainPredict
-# shift test predictions for plotting
-testPredictPlot = np.empty_like(dataset)
-testPredictPlot[:, :] = np.nan
-testPredictPlot[len(trainPredict)+(look_back*2)+1:len(dataset)-1, :] = testPredict
-
-valuesPredict = []
 
 trainDf = pd.DataFrame(np.array(trainPredict))
-trainDf.to_csv('results/CPUpredict_adam_many2one_tensor_1layer_32neu_trainPredict.csv', index=False, header=None)
+trainDf.to_csv('results/CPUpredict_adam_many2one_2metric_tensor_1layer_32neu_trainPredict.csv', index=False, header=None)
 
 testDf = pd.DataFrame(np.array(testPredict))
-testDf.to_csv('results/CPUpredict_adam_many2one_tensor_1layer_32neu_testPredict.csv', index=False, header=None)
-# plot baseline and predictions
-# plot baseline and predictions
-plt.plot(dataset1)
-plt.plot(trainPredictPlot)
-plt.plot(testPredictPlot)
-plt.xlabel("TimeStamp")
-plt.ylabel("CPU")
-plt.text(0,250, 'trainScore:%s - testScore: %s'%(trainScore,testScore), style='italic',
-        bbox={'facecolor':'red', 'alpha':0.5, 'pad':10})
-plt.savefig('CPUpredict_adam_many2one_tensor_1layer_32neu.png')
-# pp = PdfPages('predictCPU_adam_many2one_tensor.pdf')
-# pp.savefig()
-# pp.close()
-# plt.show()
+testDf.to_csv('results/CPUpredict_adam_many2one_2metric_tensor_1layer_32neu_testPredict.csv', index=False, header=None)
+RMSEScore=[]
+RMSEScore.append(trainScore)
+RMSEScore.append(testScore)
+RMSEDf = pd.DataFrame(np.array(RMSEScore))
+RMSEDf.to_csv('results/CPUpredict_adam_many2one_2metric_tensor_1layer_32neu_RMSE.csv', index=False, header=None)
