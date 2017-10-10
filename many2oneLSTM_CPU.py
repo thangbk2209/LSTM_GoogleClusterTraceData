@@ -54,8 +54,8 @@ trainX, trainY = create_dataset(train, look_back)
 testX, testY = create_dataset(test, look_back)
 # reshape input to be [samples, time steps, features]
 
-trainX = numpy.reshape(trainX, (trainX.shape[0], trainX.shape[1], 1))
-testX = numpy.reshape(testX, (testX.shape[0], testX.shape[1], 1))
+trainX = np.reshape(trainX, (trainX.shape[0], trainX.shape[1], 1))
+testX = np.reshape(testX, (testX.shape[0], testX.shape[1], 1))
 # create and fit the LSTM network
 model = Sequential()
 model.add(LSTM(32, return_sequences=True,input_shape=(look_back, 1)))
@@ -79,12 +79,12 @@ print('Train Score: %.2f RMSE' % (trainScore))
 testScore = math.sqrt(mean_squared_error(testY[0], testPredict[:,0]))
 print('Test Score: %.2f RMSE' % (testScore))
 # shift train predictions for plotting
-trainPredictPlot = numpy.empty_like(dataset)
-trainPredictPlot[:, :] = numpy.nan
+trainPredictPlot = np.empty_like(dataset)
+trainPredictPlot[:, :] = np.nan
 trainPredictPlot[look_back:len(trainPredict)+look_back, :] = trainPredict
 # shift test predictions for plotting
-testPredictPlot = numpy.empty_like(dataset)
-testPredictPlot[:, :] = numpy.nan
+testPredictPlot = np.empty_like(dataset)
+testPredictPlot[:, :] = np.nan
 testPredictPlot[len(trainPredict)+(look_back*2)+1:len(dataset)-1, :] = testPredict
 
 
