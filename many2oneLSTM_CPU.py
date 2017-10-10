@@ -1,4 +1,4 @@
-import numpy
+import numpy as np
 import matplotlib
 from time import time
 matplotlib.use('Agg')
@@ -63,7 +63,7 @@ model.add(LSTM(32, return_sequences=True))
 model.add(LSTM(32))
 model.add(Dense(1))
 model.compile(loss='mean_squared_error', optimizer='adam' , metrics=['acc'])
-model.fit(trainX, trainY, epochs=200, batch_size=1, verbose=2, callbacks=[EarlyStopping(monitor='loss', patience=2)])
+model.fit(trainX, trainY, epochs=200, batch_size=1, verbose=2, callbacks=[EarlyStopping(monitor='loss', patience=1)])
 # make predictions
 
 trainPredict = model.predict(trainX)

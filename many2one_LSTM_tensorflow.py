@@ -1,4 +1,4 @@
-import numpy
+import numpy as np
 import matplotlib
 from time import time
 matplotlib.use('Agg')
