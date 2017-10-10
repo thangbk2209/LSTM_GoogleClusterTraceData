@@ -20,7 +20,7 @@ def create_dataset(dataset, look_back=1):
 		a = dataset[i:(i+look_back), 0]
 		dataX.append(a)
 		dataY.append(dataset[i + look_back, 0])
-	return numpy.array(dataX), numpy.array(dataY)
+	return np.array(dataX), np.array(dataY)
 
 # tbCallBack = keras.callbacks.TensorBoard(log_dir='Graph/test.png', histogram_freq=0,  write_graph=True, write_images=True)
 tensorboard = TensorBoard(log_dir="logs/{}".format(time()))
