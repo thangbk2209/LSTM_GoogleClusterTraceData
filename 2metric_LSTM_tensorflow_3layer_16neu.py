@@ -66,12 +66,12 @@ trainX = np.reshape(trainX, (trainX.shape[0], trainX.shape[1], 1))
 testX = np.reshape(testX, (testX.shape[0], testX.shape[1], 1))
 # create and fit the LSTM network
 model = Sequential()
-model.add(LSTM(16, return_sequences=True,input_shape=(2, 1)))
-model.add(LSTM(16, return_sequences=True))
+model.add(LSTM(64, return_sequences=True,input_shape=(2, 1)))
+model.add(LSTM(32, return_sequences=True))
 model.add(LSTM(16))
 model.add(Dense(1))
 model.compile(loss='mean_squared_error', optimizer='adam' , metrics=['acc'])
-model.fit(trainX, trainY, epochs=200, batch_size=1, verbose=2)
+model.fit(trainX, trainY, epochs=200, batch_size=1, verbose=2, callbacks=[EarlyStopping(monitor='loss', patience=2, verbose=1),tensorboard])
 # make predictions
 
 
@@ -92,12 +92,12 @@ testScore = math.sqrt(mean_squared_error(testY[0], testPredict[:,0]))
 print('Test Score: %.2f RMSE' % (testScore))
 
 trainDf = pd.DataFrame(np.array(trainPredict))
-trainDf.to_csv('results/CPUpredict_adam_many2one_2metric_tensor_1layer_32neu_trainPredict.csv', index=False, header=None)
+trainDf.to_csv('results/3layers64-32-16/trainPredict.csv', index=False, header=None)
 
 testDf = pd.DataFrame(np.array(testPredict))
-testDf.to_csv('results/CPUpredict_adam_many2one_2metric_tensor_1layer_32neu_testPredict.csv', index=False, header=None)
+testDf.to_csv('results/3layers64-32-16/testPredict.csv', index=False, header=None)
 RMSEScore=[]
 RMSEScore.append(trainScore)
 RMSEScore.append(testScore)
 RMSEDf = pd.DataFrame(np.array(RMSEScore))
-RMSEDf.to_csv('results/CPUpredict_adam_many2one_2metric_tensor_1layer_32neu_RMSE.csv', index=False, header=None)
+RMSEDf.to_csv('results/3layers64-32-16/RMSE.csv', index=False, header=None)

@@ -7,8 +7,8 @@ colnames=['time_stamp','numberOfTaskIndex','numberOfMachineId','meanCPUUsage','C
 # Real_df = read_csv('/home/hunter/LSTM_GoogleClusterTraceData/data/data_resource_JobId_6336594489.csv', header=None, index_col=False, names=colnames, usecols=[4], engine='python')
 # df = read_csv('/mnt/volume/ggcluster/spark-2.1.1-bin-hadoop2.7/thangbk2209/LSTM_GoogleClusterTraceData/data/data_resource_JobId_6336594489.csv', header=None, index_col=False, names=colnames, usecols=[4], engine='python')
 Real_df = read_csv('/home/nguyen/learnRNNs/data/data_resource_JobId_6336594489.csv', header=None, index_col=False, names=colnames, usecols=[4], engine='python')
-Pred_Train_df = read_csv('/home/nguyen/learnRNNs/results/CPUpredict_adam_many2one_2metric_tensor_1layer_32neu_trainPredict.csv', header=None, index_col=False, engine='python')
-Pred_Test_df = read_csv('/home/nguyen/learnRNNs/results/CPUpredict_adam_many2one_2metric_tensor_1layer_32neu_testPredict.csv', header=None, index_col=False, engine='python')
+Pred_Train_df = read_csv('/home/nguyen/learnRNNs/results/many2one_tensorflow_testPredict.csv', header=None, index_col=False, engine='python')
+Pred_Test_df = read_csv('/home/nguyen/learnRNNs/results/many2one_tensorflow_testPredict.csv', header=None, index_col=False, engine='python')
 
 RealDataset = Real_df.values
 print RealDataset
