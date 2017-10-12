@@ -23,7 +23,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 # 	return np.array(dataX), np.array(dataY)
 
 # tbCallBack = keras.callbacks.TensorBoard(log_dir='Graph/test.png', histogram_freq=0,  write_graph=True, write_images=True)
-# tensorboard = TensorBoard(log_dir="logs/{}".format(time()))
+tensorboard = TensorBoard(log_dir="logs/{}".format(time()))
 # df = read_csv('/home/nguyen/learnRNNs/international-airline-passengers.csv', usecols=[1], engine='python', skipfooter=3)
 colnames=['time_stamp','numberOfTaskIndex','numberOfMachineId','meanCPUUsage','CMU','AssignMem','unmapped_cache_usage','page_cache_usage', 'max_mem_usage','mean_diskIO_time','mean_local_disk_space','max_cpu_usage', 'max_disk_io_time', 'cpi', 'mai','sampled_cpu_usage']
 # 
