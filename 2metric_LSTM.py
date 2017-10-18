@@ -25,17 +25,15 @@ from matplotlib.backends.backend_pdf import PdfPages
 # tbCallBack = keras.callbacks.TensorBoard(log_dir='Graph/test.png', histogram_freq=0,  write_graph=True, write_images=True)
 tensorboard = TensorBoard(log_dir="logs/{}".format(time()))
 # df = read_csv('/home/nguyen/learnRNNs/international-airline-passengers.csv', usecols=[1], engine='python', skipfooter=3)
-colnames=['time_stamp','numberOfTaskIndex','numberOfMachineId','meanCPUUsage','CMU','AssignMem','unmapped_cache_usage','page_cache_usage', 'max_mem_usage','mean_diskIO_time','mean_local_disk_space','max_cpu_usage', 'max_disk_io_time', 'cpi', 'mai','sampled_cpu_usage']
-# 
-df = read_csv('/home/hunter/LSTM_GoogleClusterTraceData/data/data_resource_JobId_6336594489.csv', header=None, index_col=False, names=colnames, usecols=[4,6], engine='python')
-# df = read_csv('/mnt/volume/ggcluster/spark-2.1.1-bin-hadoop2.7/thangbk2209/LSTM_GoogleClusterTraceData/data/data_resource_JobId_6336594489.csv', header=None, index_col=False, names=colnames, usecols=[4], engine='python')
-# df = read_csv('/home/nguyen/learnRNNs/data/data_resource_JobId_6336594489.csv', header=None, index_col=False, names=colnames, usecols=[4,6], engine='python')
+colnames = ['cpu_rate','mem_usage','disk_io_time','disk_space'] 
+df = read_csv('data/Fuzzy_data_sampling_617685_metric_10min_datetime_origin.csv', header=None, index_col=False, names=colnames, usecols=[1,2], engine='python')
 
 dataset = df.values
 
 # normalize the dataset
 length = len(dataset)
 scaler = MinMaxScaler(feature_range=(0, 1))
+
 CPU_nomal = scaler.fit_transform(dataset.T[0])
 RAM_nomal = scaler.fit_transform(dataset.T[1])
 
@@ -52,51 +50,40 @@ data = np.array(data)
 # split into train and test sets
 train_size = int(length * 0.67)
 test_size = length - train_size
-train, test = data[0:train_size,:], data[train_size:length,:]
-print "train"
-print train
-print test
-# reshape into X=t and Y=t+1
-# look_back = 3
+batch_size_array = [1,2,3,4,5,6,7,8,9,10]
 trainX, trainY = data[0:train_size], CPU_nomal[0:train_size]
-testX, testY = data[train_size:length], CPU_nomal[train_size:length]
+testX = data[train_size:length]
+testY =  dataset.T[1][train_size:length]
 # reshape input to be [samples, time steps, features]
 
 trainX = np.reshape(trainX, (trainX.shape[0], trainX.shape[1], 1))
 testX = np.reshape(testX, (testX.shape[0], testX.shape[1], 1))
+
 # create and fit the LSTM network
-model = Sequential()
-model.add(LSTM(512,input_shape=(2, 1)))
+for batch_size in batch_size_array: 
+	print "batch_size= ", batch_size
+	model = Sequential()
+	model.add(LSTM(512, activation = 'relu',input_shape=(2, 1)))
 
-model.add(Dense(1))
-model.compile(loss='mean_squared_error', optimizer='adam' , metrics=['acc'])
-model.fit(trainX, trainY, epochs=200, batch_size=1, verbose=2, callbacks=[EarlyStopping(monitor='loss', patience=2, verbose=1),tensorboard])
-# make predictions
+	model.add(Dense(1))
+	model.compile(loss='mean_squared_error' ,optimizer='adam' , metrics=['acc'])
+	model.fit(trainX, trainY, epochs=2000, batch_size=batch_size, verbose=2, callbacks=[EarlyStopping(monitor='loss', patience=2, verbose=1),tensorboard])
+	# make predictions
 
+	testPredict = model.predict(testX)
 
-trainPredict = model.predict(trainX)
-testPredict = model.predict(testX)
+	print testPredict
+	# invert predictions
+	testPredict = scaler.inverse_transform(testPredict)
 
-print trainPredict
-print testPredict
-# invert predictions
-trainPredict = scaler.inverse_transform(trainPredict)
-trainY = scaler.inverse_transform([trainY])
-testPredict = scaler.inverse_transform(testPredict)
-testY = scaler.inverse_transform([testY])
-# calculate root mean squared error
-trainScore = math.sqrt(mean_squared_error(trainY[0], trainPredict[:,0]))
-print('Train Score: %.2f RMSE' % (trainScore))
-testScore = math.sqrt(mean_squared_error(testY[0], testPredict[:,0]))
-print('Test Score: %.2f RMSE' % (testScore))
+	# calculate root mean squared error
 
-trainDf = pd.DataFrame(np.array(trainPredict))
-trainDf.to_csv('results/1layer_512/trainPredict.csv', index=False, header=None)
+	testScore = math.sqrt(mean_squared_error(testY, testPredict[:,0]))
+	print('Test Score: %.2f RMSE' % (testScore))
 
-testDf = pd.DataFrame(np.array(testPredict))
-testDf.to_csv('results/1layer_512/testPredict.csv', index=False, header=None)
-RMSEScore=[]
-RMSEScore.append(trainScore)
-RMSEScore.append(testScore)
-RMSEDf = pd.DataFrame(np.array(RMSEScore))
-RMSEDf.to_csv('results/1layer_512/RMSE.csv', index=False, header=None)
+	testDf = pd.DataFrame(np.array(testPredict))
+	testDf.to_csv('results/1layer_512neu/testPredict_batchsize=%s.csv'%(batch_size), index=False, header=None)
+	RMSEScore=[]
+	RMSEScore.append(testScore)
+	RMSEDf = pd.DataFrame(np.array(RMSEScore))
+	RMSEDf.to_csv('results/1layer_512neu/RMSE_batchsize=%s.csv'%(batch_size), index=False, header=None)
