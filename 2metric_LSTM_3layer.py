@@ -63,9 +63,12 @@ testX = np.reshape(testX, (testX.shape[0], testX.shape[1], 1))
 for batch_size in batch_size_array: 
 	print "batch_size= ", batch_size
 	model = Sequential()
-	model.add(LSTM(64,activation = 'relu', return_sequences=True,input_shape=(2, 1)))
-	model.add(LSTM(32,activation = 'relu', return_sequences=True))
-	model.add(LSTM(16))
+	model.add(LSTM(64, return_sequences=True,input_shape=(2, 1)))
+	model.add(LSTM(32, return_sequences=True))
+	model.add(LSTM(16, return_sequences=True))
+	model.add(LSTM(8, return_sequences=True))
+	model.add(LSTM(4, return_sequences=True))
+	model.add(LSTM(2))
 	model.add(Dense(1))
 	model.compile(loss='mean_squared_error' ,optimizer='adam' , metrics=['acc'])
 	model.fit(trainX, trainY, epochs=2000, batch_size=batch_size, verbose=2, callbacks=[EarlyStopping(monitor='loss', patience=2, verbose=1),tensorboard])
@@ -83,8 +86,8 @@ for batch_size in batch_size_array:
 	print('Test Score: %.2f RMSE' % (testScore))
 
 	testDf = pd.DataFrame(np.array(testPredict))
-	testDf.to_csv('results/3layers64-32-16/testPredict_batchsize=%s.csv'%(batch_size), index=False, header=None)
+	testDf.to_csv('results/6layers64-32-16/testPredict_batchsize=%s.csv'%(batch_size), index=False, header=None)
 	RMSEScore=[]
 	RMSEScore.append(testScore)
 	RMSEDf = pd.DataFrame(np.array(RMSEScore))
-	RMSEDf.to_csv('results/3layers64-32-16/RMSE_batchsize=%s.csv'%(batch_size), index=False, header=None)
+	RMSEDf.to_csv('results/6layers64-32-16/RMSE_batchsize=%s.csv'%(batch_size), index=False, header=None)
