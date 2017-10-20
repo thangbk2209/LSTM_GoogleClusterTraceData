@@ -12,8 +12,8 @@ from keras.layers import Dense
 from keras.layers import LSTM
 from keras.callbacks import TensorBoard, EarlyStopping
 from sklearn.preprocessing import MinMaxScaler
-from sklearn.metrics import mean_squared_error
-from matplotlib.backends.backend_pdf import PdfPages
+from sklearn.metrics import mean_squared_error, mean_absolute_error
+
 # def create_dataset(dataset, look_back=1):
 # 	dataX, dataY = [], []
 # 	for i in range(len(dataset)-look_back-1):
@@ -50,7 +50,7 @@ data = np.array(data)
 # split into train and test sets
 train_size = int(length * 0.67)
 test_size = length - train_size
-batch_size_array = [1,2,3,4,5,6,7,8,9,10]
+batch_size_array = [8,16,32,64,128]
 trainX, trainY = data[0:train_size], CPU_nomal[0:train_size]
 testX = data[train_size:length]
 testY =  dataset.T[1][train_size:length]
@@ -63,31 +63,46 @@ testX = np.reshape(testX, (testX.shape[0], testX.shape[1], 1))
 for batch_size in batch_size_array: 
 	print "batch_size= ", batch_size
 	model = Sequential()
-	model.add(LSTM(64, return_sequences=True,input_shape=(2, 1)))
-	model.add(LSTM(32, return_sequences=True))
-	model.add(LSTM(16, return_sequences=True))
-	model.add(LSTM(8, return_sequences=True))
-	model.add(LSTM(4, return_sequences=True))
+	model.add(LSTM(64, return_sequences=True, activation = 'relu',input_shape=(2, 1)))
+	model.add(LSTM(32, return_sequences=True, activation = 'relu'))
+	model.add(LSTM(16, return_sequences=True, activation = 'relu'))
+	model.add(LSTM(8, return_sequences=True, activation = 'relu'))
+	model.add(LSTM(4, return_sequences=True, activation = 'relu'))
 	model.add(LSTM(2))
 	model.add(Dense(1))
-	model.compile(loss='mean_squared_error' ,optimizer='adam' , metrics=['acc'])
-	model.fit(trainX, trainY, epochs=2000, batch_size=batch_size, verbose=2, callbacks=[EarlyStopping(monitor='loss', patience=2, verbose=1),tensorboard])
+	model.compile(loss='mean_squared_error' ,optimizer='adam' , metrics=['mean_squared_error'])
+	history = model.fit(trainX, trainY, epochs=2000, batch_size=batch_size, verbose=2,validation_split=0.1,
+	 							callbacks=[EarlyStopping(monitor='loss', patience=20, verbose=1),tensorboard])
 	# make predictions
-
+	# list all data in history
+	print(history.history.keys())
+	# summarize history for accuracy
+	# summarize history for loss
+	plt.plot(history.history['loss'])
+	plt.plot(history.history['val_loss'])
+	plt.title('model loss')
+	plt.ylabel('loss')
+	plt.xlabel('epoch')
+	plt.legend(['train', 'test'], loc='upper left')
+	# plt.show()
+	plt.savefig('results/6layers64-32-16/history_batchsize=%s.png'%(batch_size))
 	testPredict = model.predict(testX)
 
 	print testPredict
 	# invert predictions
-	testPredict = scaler.inverse_transform(testPredict)
+	testPredictInverse = scaler.inverse_transform(testPredict)
 
 	# calculate root mean squared error
 
-	testScore = math.sqrt(mean_squared_error(testY, testPredict[:,0]))
+	testScoreRMSE = math.sqrt(mean_squared_error(testY, testPredictInverse[:,0]))
+	testScoreMAE = mean_absolute_error(testY, testPredictInverse[:,0])
 	print('Test Score: %.2f RMSE' % (testScore))
-
-	testDf = pd.DataFrame(np.array(testPredict))
-	testDf.to_csv('results/6layers64-32-16/testPredict_batchsize=%s.csv'%(batch_size), index=False, header=None)
-	RMSEScore=[]
-	RMSEScore.append(testScore)
-	RMSEDf = pd.DataFrame(np.array(RMSEScore))
-	RMSEDf.to_csv('results/6layers64-32-16/RMSE_batchsize=%s.csv'%(batch_size), index=False, header=None)
+	testNotInverseDf = pd.DataFrame(np.array(testPredict))
+	testNotInverseDf.to_csv('results/6layers64-32-16/testPredict_batchsize=%s.csv'%(batch_size), index=False, header=None)
+	testDf = pd.DataFrame(np.array(testPredictInverse))
+	testDf.to_csv('results/6layers64-32-16/testPredictInverse_batchsize=%s.csv'%(batch_size), index=False, header=None)
+	errorScore=[]
+	errorScore.append(testScoreRMSE)
+	errorScore.append(testScoreMAE)
+	errorDf = pd.DataFrame(np.array(errorScore))
+	errorDf.to_csv('results/6layers64-32-16/error_batchsize=%s.csv'%(batch_size), index=False, header=None)
