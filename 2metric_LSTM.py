@@ -92,7 +92,8 @@ for batch_size in batch_size_array:
 
 	testScoreRMSE = math.sqrt(mean_squared_error(testY, testPredictInverse[:,0]))
 	testScoreMAE = mean_absolute_error(testY, testPredictInverse[:,0])
-	print('Test Score: %.2f RMSE' % (testScore))
+	print('Test Score: %.2f RMSE' % (testScoreRMSE))
+	print('Test Score: %.2f MAE' % (testScoreMAE))
 	testNotInverseDf = pd.DataFrame(np.array(testPredict))
 	testNotInverseDf.to_csv('results/1layer_512neu/testPredict_batchsize=%s.csv'%(batch_size), index=False, header=None)
 	testDf = pd.DataFrame(np.array(testPredictInverse))

@@ -66,8 +66,6 @@ for batch_size in batch_size_array:
 	model.add(LSTM(64, return_sequences=True, activation = 'relu',input_shape=(2, 1)))
 	model.add(LSTM(32, return_sequences=True, activation = 'relu'))
 	model.add(LSTM(16, return_sequences=True, activation = 'relu'))
-	model.add(LSTM(8, return_sequences=True, activation = 'relu'))
-	model.add(LSTM(4, return_sequences=True, activation = 'relu'))
 	model.add(LSTM(2))
 	model.add(Dense(1))
 	model.compile(loss='mean_squared_error' ,optimizer='adam' , metrics=['mean_squared_error'])
@@ -96,7 +94,8 @@ for batch_size in batch_size_array:
 
 	testScoreRMSE = math.sqrt(mean_squared_error(testY, testPredictInverse[:,0]))
 	testScoreMAE = mean_absolute_error(testY, testPredictInverse[:,0])
-	print('Test Score: %.2f RMSE' % (testScore))
+	print('Test Score: %.2f RMSE' % (testScoreRMSE))
+	print('Test Score: %.2f MAE' % (testScoreMAE))
 	testNotInverseDf = pd.DataFrame(np.array(testPredict))
 	testNotInverseDf.to_csv('results/6layers64-32-16/testPredict_batchsize=%s.csv'%(batch_size), index=False, header=None)
 	testDf = pd.DataFrame(np.array(testPredictInverse))
