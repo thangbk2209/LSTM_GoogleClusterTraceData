@@ -89,7 +89,7 @@ for batch_size in batch_size_array:
 	print testPredict
 	# invert predictions
 	testPredictInverse = scaler.inverse_transform(testPredict)
-
+	print testPredictInverse
 	# calculate root mean squared error
 
 	testScoreRMSE = math.sqrt(mean_squared_error(testY, testPredictInverse[:,0]))
