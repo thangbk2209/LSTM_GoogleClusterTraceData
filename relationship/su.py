@@ -68,7 +68,7 @@ def symmetrical_uncertainly(X,Y):
 # colnames=['meanCPUUsage' ,'CMU' ,'AssignMem' ,'unmap_page_cache_memory_ussage' ,'page_cache_usage' ,'mean_local_disk_space', 'timeStamp']
 # df = read_csv('/home/nguyen/spark-lab/spark-2.1.1-bin-hadoop2.7/google_cluster_analysis/results/my_offical_data_resource_TopJobId.csv', header=None, index_col=False, names=colnames)
 colnames=['cpu_rate','mem_usage','disk_io_time','disk_space']
-df = read_csv('data/Fuzzy_data_sampling_617685_metric_10min_datetime_origin.csv', header=None, index_col=False, names=colnames)
+df = read_csv('data/Fuzzy_data_resource_JobId_6336594489_5minutes.csv', header=None, index_col=False, names=colnames)
 
 cpu_rate = df['cpu_rate'].values
 mem_usage = df['mem_usage'].values
@@ -79,16 +79,24 @@ disk_space = df['disk_space'].values
 su=[]
 # entropyGGTrace = []
 # # numberOfEntropy = 0
-# print symmetrical_uncertainly(cpu_rate,mem_usage)
+print symmetrical_uncertainly(cpu_rate,mem_usage)
 # print symmetrical_uncertainly(cpu_rate,disk_io_time)
 # print symmetrical_uncertainly(cpu_rate,disk_space)
 # print symmetrical_uncertainly(disk_io_time,mem_usage)
 # print symmetrical_uncertainly(disk_space,mem_usage)
 # print symmetrical_uncertainly(disk_space,disk_io_time)
 
-for i in range(len(colnames)-1):
+for i in range(len(colnames)):
+	sui=[]
+	for k in range(i+1):
+		if(k==i):
+			sui.append(1)
+		else:
+			sui.append(symmetrical_uncertainly(df[colnames[i]].values,df[colnames[k]].values))
 	for j in range(i+1, len(colnames),1):
-		su.append(symmetrical_uncertainly(df[colnames[i]].values,df[colnames[j]].values))
+		sui.append(symmetrical_uncertainly(df[colnames[i]].values,df[colnames[j]].values))
+	su.append(sui)
 print su
+# su=[[1,2,3],[2,3,4]]
 dataFuzzyDf = pd.DataFrame(np.array(su))
-dataFuzzyDf.to_csv('data/symetrical_uncertainty_sampling_617685_metric_10min_datetime_origin.csv', index=False, header=None)
+dataFuzzyDf.to_csv('data/symetrical_uncertainty_data_resource_JobId_6336594489_5minutes.csv', index=False, header=None)

@@ -25,6 +25,7 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error
 # tbCallBack = keras.callbacks.TensorBoard(log_dir='Graph/test.png', histogram_freq=0,  write_graph=True, write_images=True)
 tensorboard = TensorBoard(log_dir="logs/{}".format(time()))
 # df = read_csv('/home/nguyen/learnRNNs/international-airline-passengers.csv', usecols=[1], engine='python', skipfooter=3)
+
 colnames = ['cpu_rate','mem_usage','disk_io_time','disk_space'] 
 df = read_csv('data/Fuzzy_data_sampling_617685_metric_10min_datetime_origin.csv', header=None, index_col=False, names=colnames, usecols=[1,2], engine='python')
 
@@ -51,7 +52,7 @@ data = np.array(data)
 train_size = int(length * 0.67)
 test_size = length - train_size
 batch_size_array = [8,16,32,64,128]
-trainX, trainY = data[0:train_size], CPU_nomal[0:train_size]
+trainX, trainY = data[0:train_size], CPU_nomal[1:train_size+1]
 testX = data[train_size:length]
 testY =  dataset.T[1][train_size:length]
 # reshape input to be [samples, time steps, features]
