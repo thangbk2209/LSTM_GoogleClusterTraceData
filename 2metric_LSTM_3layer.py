@@ -27,46 +27,52 @@ tensorboard = TensorBoard(log_dir="logs/{}".format(time()))
 # df = read_csv('/home/nguyen/learnRNNs/international-airline-passengers.csv', usecols=[1], engine='python', skipfooter=3)
 
 colnames = ['cpu_rate','mem_usage','disk_io_time','disk_space'] 
-df = read_csv('data/Fuzzy_data_sampling_617685_metric_10min_datetime_origin.csv', header=None, index_col=False, names=colnames, usecols=[1,2], engine='python')
+df = read_csv('data/Fuzzy_data_sampling_617685_metric_10min_datetime_origin.csv', header=None, index_col=False, names=colnames, usecols=[0,1], engine='python')
 
 dataset = df.values
 
 # normalize the dataset
 length = len(dataset)
 scaler = MinMaxScaler(feature_range=(0, 1))
-
-CPU_nomal = scaler.fit_transform(dataset.T[0])
 RAM_nomal = scaler.fit_transform(dataset.T[1])
+CPU_nomal = scaler.fit_transform(dataset.T[0])
+
 
 data = []
-for i in range(length):
+for i in range(length-2):
 	a=[]
-	a.append(CPU_nomal[i])
-	a.append(RAM_nomal[i])
+	for j in range(2):
+		a.append(CPU_nomal[i+j])
+		a.append(RAM_nomal[i+j])
 	data.append(a)
 data = np.array(data)
-
+print 'data'
+print data
 # split into train and test sets
 
 # split into train and test sets
 train_size = int(length * 0.67)
 test_size = length - train_size
 batch_size_array = [8,16,32,64,128]
-trainX, trainY = data[0:train_size], CPU_nomal[1:train_size+1]
-testX = data[train_size:length]
-testY =  dataset.T[1][train_size:length]
+trainX, trainY = data[0:train_size], CPU_nomal[2:train_size+2]
+testX = data[train_size:length-2]
+testY =  dataset.T[0][train_size+2:length]
+print 'trainX'
+print trainX
 # reshape input to be [samples, time steps, features]
 
 trainX = np.reshape(trainX, (trainX.shape[0], trainX.shape[1], 1))
 testX = np.reshape(testX, (testX.shape[0], testX.shape[1], 1))
+print 'trainX'
+print trainX
 
 # create and fit the LSTM network
 for batch_size in batch_size_array: 
 	print "batch_size= ", batch_size
 	model = Sequential()
-	model.add(LSTM(64, return_sequences=True, activation = 'relu',input_shape=(2, 1)))
-	model.add(LSTM(32, return_sequences=True, activation = 'relu'))
-	model.add(LSTM(16, return_sequences=True, activation = 'relu'))
+	model.add(LSTM(4, return_sequences=True, activation = 'relu',input_shape=(4, 1)))
+	# model.add(LSTM(32, return_sequences=True, activation = 'relu'))
+	# model.add(LSTM(16, return_sequences=True, activation = 'relu'))
 	model.add(LSTM(2))
 	model.add(Dense(1))
 	model.compile(loss='mean_squared_error' ,optimizer='adam' , metrics=['mean_squared_error'])

@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import pandas as pd 
 import math
 import keras
+from numpy import polyfit
 from pandas import read_csv
 from keras.models import Sequential
 from keras.layers import Dense
@@ -17,16 +18,48 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error
 # tensorboard = TensorBoard(log_dir="logs/{}".format(time()))
 # df = read_csv('/home/nguyen/learnRNNs/international-airline-passengers.csv', usecols=[1], engine='python', skipfooter=3)
 colnames = ['cpu_rate','mem_usage','disk_io_time','disk_space'] 
-df = read_csv('data/Fuzzy_data_sampling_617685_metric_10min_datetime_origin.csv', header=None, index_col=False, names=colnames, usecols=[1,2], engine='python')
-
+# series = Series.from_csv('data/Fuzzy_data_resource_JobId_6336594489_5minutes.csv', header=0)
+df = read_csv('data/Fuzzy_data_resource_JobId_6336594489_5minutes.csv', header=None, index_col=False, names=colnames, engine='python')
+length = len(df['cpu_rate'].values)
 dataset = df.values
-
+print length
+deseasonalArr=[]
+for name in colnames:
+	X = [i%365 for i in range(0, len(df[name].values))]
+	y = df[name].values
+	degree = 4
+	coef = polyfit(X, y, degree)
+	print('Coefficients: %s' % coef)
+	# create curve
+	curve = []
+	app=[]
+	for i in range(len(X)):
+		value = coef[-1]
+		for d in range(degree):
+			value += X[i]**(degree-d) * coef[d]
+		curve.append(np.array(value))
+	app.append(curve)	
+	# create seasonally adjusted
+	values = df[name].values
+	diff = []
+	for i in range(len(values)):
+		value = values[i] - curve[i]
+		diff.append(value)
+	deseasonalArr.append(np.array(diff))
+print "differencting"
+print app
+# data=[]
+# for i in range(length):
+# 	a=[]
+# 	for j in range(len(deseasonalArr)):
+# 		a.append(deseasonalArr[j][i])
+# 	data.append(a)
 # normalize the dataset
 length = len(dataset)
 scaler = MinMaxScaler(feature_range=(0, 1))
 
-RAM_nomal = scaler.fit_transform(dataset.T[1])
-CPU_nomal = scaler.fit_transform(dataset.T[0])
+RAM_nomal = scaler.fit_transform(deseasonalArr[1])
+CPU_nomal = scaler.fit_transform(deseasonalArr[0])
 
 
 
@@ -65,8 +98,8 @@ for sliding in sliding_widow:
 	for batch_size in batch_size_array: 
 		print "batch_size= ", batch_size
 		model = Sequential()
-		model.add(LSTM(32,return_sequences=True,activation = 'relu',input_shape=(2*sliding, 1)))
-		model.add(LSTM(4,activation = 'relu'))
+		model.add(LSTM(32,return_sequences=True,input_shape=(2*sliding, 1)))
+		model.add(LSTM(4))
 		model.add(Dense(1))
 		model.compile(loss='mean_squared_error' ,optimizer='adam' , metrics=['mean_squared_error'])
 		history = model.fit(trainX, trainY, epochs=2000, batch_size=batch_size, verbose=2,validation_split=0.1,
@@ -83,7 +116,7 @@ for sliding in sliding_widow:
 		plt.xlabel('epoch')
 		plt.legend(['train', 'test'], loc='upper left')
 		# plt.show()
-		plt.savefig('resultsdata10minutes/2layer_32-4neu/history_sliding=%s_batchsize=%s.png'%(sliding,batch_size))
+		plt.savefig('resultsdataDeseasonal5minutes/2layer_32-4neu/history_sliding=%s_batchsize=%s.png'%(sliding,batch_size))
 		testPredict = model.predict(testX)
 
 		print testPredict
@@ -91,17 +124,25 @@ for sliding in sliding_widow:
 		testPredictInverse = scaler.inverse_transform(testPredict)
 		print testPredictInverse
 		# calculate root mean squared error
+		resultsCPUPredicts=[]
+		for i in range(len(testPredict)):
+			CPUPredict = testPredictInverse[i]+ app[0][train_size+sliding+i]
+			resultsCPUPredicts.append(np.array(CPUPredict))
+		print 'resultsCPUPredicts'
+		print len(testPredict)
+		print length - train_size-sliding
+		print resultsCPUPredicts
 
-		testScoreRMSE = math.sqrt(mean_squared_error(testY, testPredictInverse[:,0]))
-		testScoreMAE = mean_absolute_error(testY, testPredictInverse[:,0])
-		print('Test Score: %.2f RMSE' % (testScoreRMSE))
-		print('Test Score: %.2f MAE' % (testScoreMAE))
+		# testScoreRMSE = math.sqrt(mean_squared_error(testY, resultsCPUPredicts[:,0]))
+		# testScoreMAE = mean_absolute_error(testY, resultsCPUPredicts[:,0])
+		# print('Test Score: %.2f RMSE' % (testScoreRMSE))
+		# print('Test Score: %.2f MAE' % (testScoreMAE))
 		testNotInverseDf = pd.DataFrame(np.array(testPredict))
-		testNotInverseDf.to_csv('resultsdata10minutes/2layer_32-4neu/testPredict_sliding=%s_batchsize=%s.csv'%(sliding,batch_size), index=False, header=None)
-		testDf = pd.DataFrame(np.array(testPredictInverse))
-		testDf.to_csv('resultsdata10minutes/2layer_32-4neu/testPredictInverse_sliding=%s_batchsize=%s.csv'%(sliding,batch_size), index=False, header=None)
-		errorScore=[]
-		errorScore.append(testScoreRMSE)
-		errorScore.append(testScoreMAE)
-		errorDf = pd.DataFrame(np.array(errorScore))
-		errorDf.to_csv('resultsdata10minutes/2layer_32-4neu/error_sliding=%s_batchsize=%s.csv'%(sliding,batch_size), index=False, header=None)
+		testNotInverseDf.to_csv('resultsdataDeseasonal5minutes/2layer_32-4neu/testPredict_sliding=%s_batchsize=%s.csv'%(sliding,batch_size), index=False, header=None)
+		testDf = pd.DataFrame(np.array(resultsCPUPredicts))
+		testDf.to_csv('resultsdataDeseasonal5minutes/2layer_32-4neu/testPredictInverse_sliding=%s_batchsize=%s.csv'%(sliding,batch_size), index=False, header=None)
+		# errorScore=[]
+		# errorScore.append(testScoreRMSE)
+		# errorScore.append(testScoreMAE)
+		# errorDf = pd.DataFrame(np.array(errorScore))
+		# errorDf.to_csv('resultsdataDeseasonal5minutes/2layer_32-4neu/error_sliding=%s_batchsize=%s.csv'%(sliding,batch_size), index=False, header=None)

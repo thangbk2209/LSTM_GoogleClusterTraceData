@@ -14,8 +14,8 @@ for sliding in sliding_widow:
 	# df = read_csv('/mnt/volume/ggcluster/spark-2.1.1-bin-hadoop2.7/thangbk2209/LSTM_GoogleClusterTraceData/data/data_resource_JobId_6336594489.csv', header=None, index_col=False, names=colnames, usecols=[4], engine='python')
 		Real_df = read_csv('/home/nguyen/LSTM_GoogleClusterTraceData/data/Fuzzy_data_resource_JobId_6336594489_5minutes.csv', header=None, index_col=False, names=colnames, engine='python')
 		# Pred_TestNotInverse_df = read_csv('1layer_512neu/loltestPredict_batchsize=8.csv', header=None, index_col=False, engine='python')
-		Pred_Test_df = read_csv('/home/nguyen/LSTM_GoogleClusterTraceData/results/2layer_32-4neu/testPredictInverse_sliding=%s_batchsize=%s.csv'%(sliding,batch_size), header=None, index_col=False, engine='python')
-		RMSE_df = read_csv('/home/nguyen/LSTM_GoogleClusterTraceData/results/2layer_32-4neu/error_sliding=%s_batchsize=%s.csv'%(sliding,batch_size), header=None, index_col=False, engine='python')
+		Pred_Test_df = read_csv('/home/nguyen/LSTM_GoogleClusterTraceData/resultsdata5minutes/2layer_32-4neu/testPredictInverse_sliding=%s_batchsize=%s.csv'%(sliding,batch_size), header=None, index_col=False, engine='python')
+		RMSE_df = read_csv('/home/nguyen/LSTM_GoogleClusterTraceData/resultsdata5minutes/2layer_32-4neu/error_sliding=%s_batchsize=%s.csv'%(sliding,batch_size), header=None, index_col=False, engine='python')
 		RealDataset = Real_df['cpu_rate'].values
 		print RealDataset
 		# Pred_TestNotInverse = Pred_TestNotInverse_df.values

@@ -10,15 +10,23 @@ from pandas import read_csv
 from sklearn.preprocessing import MinMaxScaler
 
 colnames = ['cpu_rate','mem_usage','disk_io_time','disk_space'] 
-df = read_csv('data/Fuzzy_data_sampling_617685_metric_10min_datetime_origin.csv', header=None, index_col=False, names=colnames, usecols=[1,2], engine='python')
+df = read_csv('data/Fuzzy_data_sampling_617685_metric_10min_datetime_origin.csv', header=None, index_col=False, names=colnames, usecols=[0,1], engine='python')
 
 dataset = df.values
 
 # normalize the dataset
 length = len(dataset)
 scaler = MinMaxScaler(feature_range=(0, 1))
-
-CPU_normal = scaler.fit_transform(dataset.T[0])
 RAM_normal = scaler.fit_transform(dataset.T[1])
-CPUDf = pd.DataFrame(np.array(CPU_normal))
-CPUDf.to_csv('data/CPU_normal.csv', index=False, header=None)
+CPU_normal = scaler.fit_transform(dataset.T[0])
+
+data=[]
+data.append(CPU_normal)
+data.append(RAM_normal)
+data = np.array(data)
+data = data.T
+dataDf = pd.DataFrame(data)
+dataDf.to_csv('data/normal.csv', index=False, header=None)
+CPU = scaler.inverse_transform(CPU_normal)
+CPUDf = pd.DataFrame(CPU)
+CPUDf.to_csv('data/CPU.csv', index=False, header=None)
